@@ -1,10 +1,33 @@
+from smbus2 import SMBus
 import time
 import cv2
 from picamera.array import PiRGBArray
 from picamera import PiCamera
 import numpy as np
+import board
+import busio
+import adafruit_character_lcd.character_lcd_rgb_i2c as character_lcd
+
+bus = SMBus(1)
+
+address = 0x04
+
+lcd_columns = 16
+lcd_rows = 2
+i2c = busio.I2C(board.SCL, board.SDA)
+lcd = character_lcd.Character_LCD_RGB_I2C(i2c, lcd_columns, lcd_rows)
 
 camera = None
+
+def writeString(value): #send to arduino
+    bus.write_byte_data(address,0,value)
+    return -1
+
+def readNumber(): #receive info from arduino
+    number = bus.read_byte_data(address, 0)
+    return number
+
+
 def camera_init(res=None, iso=400):
     global camera
     camera = PiCamera(resolution=res)
@@ -70,9 +93,11 @@ def convert_2_gray(img, show=True):
 def detect_aruco(bgr_img=None, get_info=True):
     if bgr_img is None:
         bgr_img = capture_img(save=False, show=False)
+        
 
     gray_img = convert_2_gray(bgr_img, show=False)  # Convert to grayscale
-    
+#    cv2.imshow("Hey", gray_img)
+#    cv2.waitKey(0)
     parameters = cv2.aruco.DetectorParameters_create()
     aruco_dict = cv2.aruco.Dictionary_get(cv2.aruco.DICT_6X6_250)
 
@@ -124,11 +149,19 @@ def continuous_aruco_detection():
         if ids is not None:
             print("ID:", ids)
             print("Quadrants:", quadrants)
+            writeString(quadrants[0])
+            lcd.message = ("Quadrant: " + quadrant[0])
+            time.sleep(2)
 
 if __name__ == '__main__':
     camera_init(res=(1280, 720))
     
     continuous_aruco_detection()
+    
+    currentpos = readNumber()
+    lcd.clear()
+    lcd.message("Current Pos: " + currentpos)
+    time.sleep(2)
     
     camera.close()
     
