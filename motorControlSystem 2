@@ -70,6 +70,24 @@ void loop()
 }
 void sendData()
 {
- //Wire.write(sent); //send data that was read form the PI back in the reverse order
+  int sendtoPI = 0;
+ int converted = newPos%3200;
+ if(converted <= 400 && converted >= 2800)
+ {
+  sendtoPI = 4;
+ }
+ elseif(converted <= 1200 && converted > 400)
+ {
+  sendtoPI = 3;
+ }
+ elseif(converted <= 2000 && converted > 1200)
+ {
+  sendtoPI = 2;
+ }
+ elseif(converted <= 2800 && converted > 2000)
+ {
+  sendtoPI = 1;
+ }
+ Wire.write(sendtoPI);
 }
 }
