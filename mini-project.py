@@ -92,54 +92,57 @@ def convert_2_gray(img, show=True):
 
 def detect_aruco(bgr_img=None, get_info=True):
     if bgr_img is None:
-        bgr_img = capture_img(save=False, show=False)
-        
+        bgr_img = capture_img(save=False, show=False)   # Take Picture
 
     gray_img = convert_2_gray(bgr_img, show=False)  # Convert to grayscale
-#    cv2.imshow("Hey", gray_img)
-#    cv2.waitKey(0)
-    parameters = cv2.aruco.DetectorParameters_create()
-    aruco_dict = cv2.aruco.Dictionary_get(cv2.aruco.DICT_6X6_250)
+
+    parameters = cv2.aruco.DetectorParameters_create()  # Create default detector parameters
+    aruco_dict = cv2.aruco.Dictionary_get(cv2.aruco.DICT_6X6_250)   # Define correct dictionary
 
     corners, ids, rejectedImgPoints = cv2.aruco.detectMarkers(gray_img,
-                        aruco_dict,
-                        parameters=parameters)
+                                                              aruco_dict,
+                                                              parameters=parameters)
 
+    # If no markers detected
     if ids is None:
         print("No markers found")
         return None, None
-    
-    ids = [n[0] for n in ids]
+
+    ids = [n[0] for n in ids]   # make into flattened list
     if not get_info:
         return ids, None
 
-    # If there was detection, then get angle and distance
+    # Get image center
     img_height, img_width = gray_img.shape
-    img_cy = img_width // 2
-    img_cx = img_height // 2
-    
+    img_cy = img_height // 2
+    img_cx = img_width // 2
+
     quadrants = []
     for marker_corners in corners:
         marker_corners = marker_corners[0, :]
-        top_left = marker_corners[3]
-        bottom_right = marker_corners[1]
-        cy = top_left[0] + bottom_right[0]//2
-        cx = top_left[1] + bottom_right[1]//2
+        top_left = marker_corners[0]
+        bottom_right = marker_corners[2]
 
+        # Get marker center
+        cx = top_left[0] + (bottom_right[0]-top_left[0]) // 2
+        cy = top_left[1] + (bottom_right[1]-top_left[1]) // 2
+
+        # Get marker center relative to image center
         relative_x = cx - img_cx
         relative_y = cy - img_cy
-        
-        if relative_x >= 0 and relative_y >= 0:
+
+        # Find quadrant
+        if relative_x >= 0 and relative_y <= 0:
             quadrant = 1
-        elif relative_x < 0 and relative_y >= 0:
+        elif relative_x < 0 and relative_y <= 0:
             quadrant = 2
-        elif relative_x < 0 and relative_y < 0:
+        elif relative_x < 0 and relative_y > 0:
             quadrant = 3
         else:
             quadrant = 4
-        
+
         quadrants.append(quadrant)
-        
+
     return ids, quadrants
 
 
