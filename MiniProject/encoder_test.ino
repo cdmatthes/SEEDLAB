@@ -1,4 +1,5 @@
-#include <Encoder.h>
+#include <Encoder.h> //encoder library added to make position detection easier
+//Pin Assignments
 Encoder knobLeft(3,5);
 const int powerPin = 4;
 const int directionOut = 7;
@@ -11,16 +12,16 @@ void setup() {
   Serial.begin(9600);
   Serial.println("Encoder Test:");
   pinMode(powerPin, OUTPUT);
-  digitalWrite(powerPin, HIGH);
-  pinMode(directionOut, OUTPUT);//Kp V/deg; Kd V*s/deg; Ki V/(deg*s)
-  digitalWrite(directionOut, LOW);
+  digitalWrite(powerPin, HIGH); //give power to the motor
+  pinMode(directionOut, OUTPUT);
+  digitalWrite(directionOut, LOW); //set direction of motor
   pinMode(speedOut, OUTPUT);
 }
 long positionLeft = -999;
 double startTime = 0;
 void loop() {
   //analogWrite(speedOut, 127);
-  if (millis() == 1000){
+  if (millis() == 1000){ //delay step response by 1 second
     digitalWrite(speedOut, HIGH);
     startTime = micros();
   }
@@ -38,7 +39,7 @@ void loop() {
     
     deltaT = newTime - oldTime;
     velocity = (double)(newLeft - positionLeft) / deltaT;
-    velocity = velocity*3.14*1000000.0/1600.0;
+    velocity = velocity*3.14*1000000.0/1600.0; //velocity in radians per second conversion
     Serial.print(velocity);
     Serial.print("\t");
     Serial.print(newTime - startTime);
@@ -47,7 +48,7 @@ void loop() {
     oldTime = newTime;
     positionLeft = newLeft;
   }
-  if (Serial.available()){
+  if (Serial.available()){ //reset case
     Serial.read();
     Serial.println("Knob reset to zero");
     knobLeft.write(0);
