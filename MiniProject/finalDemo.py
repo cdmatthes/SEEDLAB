@@ -1,3 +1,10 @@
+"""
+Authors: John Capper & Marcus Brown
+Class: EENG350
+Assignment: Raspberry Pi Script for Mini Project
+
+"""
+
 from smbus2 import SMBus
 import time
 import cv2
@@ -29,15 +36,17 @@ def readNumber(): #receive info from arduino
 
 
 def camera_init(res=None, iso=400):
+    # Set global camera variable
     global camera
     camera = PiCamera(resolution=res)
     camera.iso = iso
     
-    time.sleep(0.5) # Wait for half-second
+    time.sleep(0.5)     # Wait for half-second
     
     camera.shutter_speed = camera.exposure_speed
     camera.exposure_mode = 'off'
-    
+
+    # Calibrate camera by allowing auto awb to get gain then turn awb_mode to off
     g = camera.awb_gains
     camera.awb_mode = 'off'
     camera.awb_gains = g
@@ -81,7 +90,7 @@ def capture_img(save=False, show=True):
 
 
 def convert_2_gray(img, show=True):
-    g_img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+    g_img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)   # BGR to Grayscale conversion
 
     if show:
         cv2.imshow("Grayscale Image", g_img)
@@ -99,6 +108,7 @@ def detect_aruco(bgr_img=None, get_info=True):
     parameters = cv2.aruco.DetectorParameters_create()  # Create default detector parameters
     aruco_dict = cv2.aruco.Dictionary_get(cv2.aruco.DICT_6X6_250)   # Define correct dictionary
 
+    # Do aruco detection
     corners, ids, rejectedImgPoints = cv2.aruco.detectMarkers(gray_img,
                                                               aruco_dict,
                                                               parameters=parameters)
@@ -170,7 +180,8 @@ def continuous_aruco_detection():
             elif currentpos == 1:
                 lcd.message = ("Curr Pos: 3*pi/2")
                 time.sleep(2)
-            currentpos = 0;
+            currentpos = 0
+
 if __name__ == '__main__':
     camera_init(res=(1280, 720))
     
