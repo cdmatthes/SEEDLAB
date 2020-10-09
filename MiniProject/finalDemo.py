@@ -27,11 +27,11 @@ lcd = character_lcd.Character_LCD_RGB_I2C(i2c, lcd_columns, lcd_rows)
 camera = None
 
 def writeString(value): #send to arduino
-    bus.write_byte_data(address,0,value)
+    bus.write_byte_data(address,0,value) #write byte to arduino
     return -1
 
 def readNumber(): #receive info from arduino
-    number = bus.read_byte_data(address, 0)
+    number = bus.read_byte_data(address, 0) #read byte from arduino
     return number
 
 
@@ -162,15 +162,15 @@ def continuous_aruco_detection():
         if ids is not None:
             print("ID:", ids)
             print("Quadrants:", quadrants)
-            writeString(ids[0])
+            writeString(ids[0]) #write marker ID to arduino
             print(ids[0])
-            lcd.message = ("Marker: " + str(ids[0]))
-            time.sleep(2)
-            currentpos = readNumber()
-            lcd.clear()
-            if currentpos == 4:
-                lcd.message = ("Curr Pos: 0")
-                time.sleep(2)
+            lcd.message = ("Marker: " + str(ids[0])) #output id number to LCD
+            time.sleep(2) #wait 2 seconds
+            currentpos = readNumber() #read position from arduino
+            lcd.clear() #clear lcd
+            if currentpos == 4: #if statements to output to LCD which quadrant the wheel is in
+                lcd.message = ("Curr Pos: 0") #print to LCD
+                time.sleep(2) #wait 2 seconds
             elif currentpos == 3:
                 lcd.message = ("Curr Pos: pi/2")
                 time.sleep(2)
