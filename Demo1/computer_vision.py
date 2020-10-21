@@ -1,7 +1,7 @@
 """
-Authors: John Capper & Marcus Brown
+Authors: John Capper
 Class: EENG350
-Assignment: Raspberry Pi Script for Mini Project
+Assignment: Computer Vision Script for Mini Project
 
 """
 
@@ -34,7 +34,7 @@ def camera_init(res=None, iso=400):
     camera.awb_gains = g
 
 
-def capture_img(save=False, show=True):
+def capture_img(save=False, show=True, fps=0):
     if save:
         fileName = input("File Name:")
         
@@ -44,7 +44,7 @@ def capture_img(save=False, show=True):
     try:
         camera.capture(rawCapture, format="bgr")
         img = rawCapture.array
-        img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+#        img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
 
     except Exception as e:
         print(e)
@@ -54,14 +54,14 @@ def capture_img(save=False, show=True):
     # Show Image
     if show:
         try:
-            cv2.imshow("Image", img)
-            cv2.waitKey(0)
+            cv2.imshow("Captured Image", img)
+            cv2.waitKey(fps)
         except:
             print('Failed to show image')
     
     # Save Image
     if save:
-        print("Savicamera.shutter_speed = camera.exposure_speedng image "+fileName)
+#        print("Savicamera.shutter_speed = camera.exposure_speedng image "+fileName)
         try:
             cv2.imwrite(fileName, img)
         except:
@@ -71,21 +71,51 @@ def capture_img(save=False, show=True):
     return img
 
 
-def convert_2_gray(img, show=True):
-    g_img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)   # BGR to Grayscale conversion
 
-    if show:
-        cv2.imshow("Grayscale Image", g_img)
-        cv2.waitKey(0)
+def centroid_from_corners(marker_corners):
+    marker_corners = marker_corners[0, :]
+    top_left = marker_corners[0]
+    bottom_right = marker_corners[2]
 
-    return g_img
+    # Get marker center
+    cx = top_left[0] + (bottom_right[0]-top_left[0]) // 2
+    cy = top_left[1] + (bottom_right[1]-top_left[1]) // 2
+    
+    return (cx, cy)
+    
+
+def quadrant_from_centroid(centroid, img_cx, img_cy):
+    cx, cy = centroid
+    
+    # Get marker center relative to image center
+    relative_x = cx - img_cx
+    relative_y = cy - img_cy
+
+    # Find quadrant
+    if relative_x >= 0 and relative_y <= 0:
+        quadrant = 1
+    elif relative_x < 0 and relative_y <= 0:
+        quadrant = 2
+    elif relative_x < 0 and relative_y > 0:
+        quadrant = 3
+    else:
+        quadrant = 4
+
+    return quadrant
+    
 
 
-def detect_aruco(bgr_img=None, get_info=True):
+def angle_from_centroid(centroid):
+
+    
+    return None
+
+
+def detect_aruco(bgr_img=None, get_all=False, show_capture=False, video_debug=False):
     if bgr_img is None:
-        bgr_img = capture_img(save=False, show=False)   # Take Picture
+        bgr_img = capture_img(show=show_capture or video_debug, fps=10 if video_debug else 0)   # Take Picture, will continuously show capture if debug is on
 
-    gray_img = convert_2_gray(bgr_img, show=False)  # Convert to grayscale
+    gray_img = cv2.cvtColor(bgr_img, cv2.COLOR_BGR2GRAY)  # Convert to grayscale
 
     parameters = cv2.aruco.DetectorParameters_create()  # Create default detector parameters
     aruco_dict = cv2.aruco.Dictionary_get(cv2.aruco.DICT_6X6_250)   # Define correct dictionary
@@ -95,54 +125,42 @@ def detect_aruco(bgr_img=None, get_info=True):
                                                               aruco_dict,
                                                               parameters=parameters)
 
+
     # If no markers detected
     if ids is None:
         print("No markers found")
-        return None, None
-
-    ids = [n[0] for n in ids]   # make into flattened list
-    if not get_info:
-        return ids, None
-
+        return None
+    
     # Get image center
     img_height, img_width = gray_img.shape
     img_cy = img_height // 2
     img_cx = img_width // 2
-
-    quadrants = []
-    for marker_corners in corners:
-        marker_corners = marker_corners[0, :]
-        top_left = marker_corners[0]
-        bottom_right = marker_corners[2]
-
-        # Get marker center
-        cx = top_left[0] + (bottom_right[0]-top_left[0]) // 2
-        cy = top_left[1] + (bottom_right[1]-top_left[1]) // 2
-
-        # Get marker center relative to image center
-        relative_x = cx - img_cx
-        relative_y = cy - img_cy
-
-        # Find quadrant
-        if relative_x >= 0 and relative_y <= 0:
-            quadrant = 1
-        elif relative_x < 0 and relative_y <= 0:
-            quadrant = 2
-        elif relative_x < 0 and relative_y > 0:
-            quadrant = 3
-        else:
-            quadrant = 4
-
-        quadrants.append(quadrant)
-
-    return ids, quadrants
-
-
+    
+    results = []
+    for marker_id, marker_corners in zip(ids, corners):   
+ 
+        centroid = centroid_from_corners(marker_corners)  # Find centroid of marker
         
+        stats = {
+            'id': marker_id[0],
+            'quadrant': quadrant_from_centroid(centroid, img_cx, img_cy),
+            'angle': angle_from_centroid(centroid)
+        }
+        if not get_all:
+            return stats
+        
+        results.append(stats)
+    
+    return results
+
+
 
 if __name__ == '__main__':
     camera_init(res=(1280, 720))
     
+    while True:
+        results = detect_aruco()
+        print(results)
     
     camera.close()
     
