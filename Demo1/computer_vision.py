@@ -16,7 +16,6 @@ import numpy as np
 camera = None
 
 
-
 def camera_init(res=None, iso=400):
     # Set global camera variable
     global camera
@@ -81,11 +80,10 @@ def centroid_from_corners(marker_corners):
     cx = top_left[0] + (bottom_right[0]-top_left[0]) // 2
     cy = top_left[1] + (bottom_right[1]-top_left[1]) // 2
     
-    return (cx, cy)
+    return cx, cy
     
 
-def quadrant_from_centroid(centroid, img_cx, img_cy):
-    cx, cy = centroid
+def quadrant_from_centroid(cx, cy, img_cx, img_cy):
     
     # Get marker center relative to image center
     relative_x = cx - img_cx
@@ -105,10 +103,9 @@ def quadrant_from_centroid(centroid, img_cx, img_cy):
     
 
 
-def angle_from_centroid(centroid):
-
+def angle_from_centroid(cx, img_cx, horizontal_fov):
     
-    return None
+    return ((img_cx-cx)/img_cx) * horizontal_fov
 
 
 def detect_aruco(bgr_img=None, get_all=False, show_capture=False, video_debug=False):
@@ -136,15 +133,17 @@ def detect_aruco(bgr_img=None, get_all=False, show_capture=False, video_debug=Fa
     img_cy = img_height // 2
     img_cx = img_width // 2
     
+    horizontal_fov = 60.3
+    
     results = []
     for marker_id, marker_corners in zip(ids, corners):   
  
-        centroid = centroid_from_corners(marker_corners)  # Find centroid of marker
+        cx, cy = centroid_from_corners(marker_corners)  # Find centroid of marker
         
         stats = {
             'id': marker_id[0],
-            'quadrant': quadrant_from_centroid(centroid, img_cx, img_cy),
-            'angle': angle_from_centroid(centroid)
+            'quadrant': quadrant_from_centroid(cx, cy, img_cx, img_cy),
+            'angle': angle_from_centroid(cx, img_cx, horizontal_fov)
         }
         if not get_all:
             return stats
@@ -156,7 +155,7 @@ def detect_aruco(bgr_img=None, get_all=False, show_capture=False, video_debug=Fa
 
 
 if __name__ == '__main__':
-    camera_init(res=(1280, 720))
+    camera_init()
     
     while True:
         results = detect_aruco()
