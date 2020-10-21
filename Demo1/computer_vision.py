@@ -1,0 +1,149 @@
+"""
+Authors: John Capper & Marcus Brown
+Class: EENG350
+Assignment: Raspberry Pi Script for Mini Project
+
+"""
+
+from smbus2 import SMBus
+import time
+import cv2
+from picamera.array import PiRGBArray
+from picamera import PiCamera
+import numpy as np
+
+
+camera = None
+
+
+
+def camera_init(res=None, iso=400):
+    # Set global camera variable
+    global camera
+    camera = PiCamera(resolution=res)
+    camera.iso = iso
+    
+    time.sleep(0.5)     # Wait for half-second
+    
+    camera.shutter_speed = camera.exposure_speed
+    camera.exposure_mode = 'off'
+
+    # Calibrate camera by allowing auto awb to get gain then turn awb_mode to off
+    g = camera.awb_gains
+    camera.awb_mode = 'off'
+    camera.awb_gains = g
+
+
+def capture_img(save=False, show=True):
+    if save:
+        fileName = input("File Name:")
+        
+    rawCapture = PiRGBArray(camera)
+    
+    # Capture Image
+    try:
+        camera.capture(rawCapture, format="bgr")
+        img = rawCapture.array
+        img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+
+    except Exception as e:
+        print(e)
+        print("Failed to capture")
+    
+    
+    # Show Image
+    if show:
+        try:
+            cv2.imshow("Image", img)
+            cv2.waitKey(0)
+        except:
+            print('Failed to show image')
+    
+    # Save Image
+    if save:
+        print("Savicamera.shutter_speed = camera.exposure_speedng image "+fileName)
+        try:
+            cv2.imwrite(fileName, img)
+        except:
+            print("Couldn't save image")
+            pass    
+    
+    return img
+
+
+def convert_2_gray(img, show=True):
+    g_img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)   # BGR to Grayscale conversion
+
+    if show:
+        cv2.imshow("Grayscale Image", g_img)
+        cv2.waitKey(0)
+
+    return g_img
+
+
+def detect_aruco(bgr_img=None, get_info=True):
+    if bgr_img is None:
+        bgr_img = capture_img(save=False, show=False)   # Take Picture
+
+    gray_img = convert_2_gray(bgr_img, show=False)  # Convert to grayscale
+
+    parameters = cv2.aruco.DetectorParameters_create()  # Create default detector parameters
+    aruco_dict = cv2.aruco.Dictionary_get(cv2.aruco.DICT_6X6_250)   # Define correct dictionary
+
+    # Do aruco detection
+    corners, ids, rejectedImgPoints = cv2.aruco.detectMarkers(gray_img,
+                                                              aruco_dict,
+                                                              parameters=parameters)
+
+    # If no markers detected
+    if ids is None:
+        print("No markers found")
+        return None, None
+
+    ids = [n[0] for n in ids]   # make into flattened list
+    if not get_info:
+        return ids, None
+
+    # Get image center
+    img_height, img_width = gray_img.shape
+    img_cy = img_height // 2
+    img_cx = img_width // 2
+
+    quadrants = []
+    for marker_corners in corners:
+        marker_corners = marker_corners[0, :]
+        top_left = marker_corners[0]
+        bottom_right = marker_corners[2]
+
+        # Get marker center
+        cx = top_left[0] + (bottom_right[0]-top_left[0]) // 2
+        cy = top_left[1] + (bottom_right[1]-top_left[1]) // 2
+
+        # Get marker center relative to image center
+        relative_x = cx - img_cx
+        relative_y = cy - img_cy
+
+        # Find quadrant
+        if relative_x >= 0 and relative_y <= 0:
+            quadrant = 1
+        elif relative_x < 0 and relative_y <= 0:
+            quadrant = 2
+        elif relative_x < 0 and relative_y > 0:
+            quadrant = 3
+        else:
+            quadrant = 4
+
+        quadrants.append(quadrant)
+
+    return ids, quadrants
+
+
+        
+
+if __name__ == '__main__':
+    camera_init(res=(1280, 720))
+    
+    
+    camera.close()
+    
+
