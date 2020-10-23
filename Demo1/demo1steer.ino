@@ -25,17 +25,80 @@ void setup() {
 }
 long positionLeft = 0;
 long positionRight = 0;
-long countChange = 1910;
+long oneFootCounts = 1910;
 long deltaT;
 double oldError = 0.0;
-long numFeet = 10;
 void loop() {
-  moveMotorForward(countChange*numFeet);
+  steer(countChange);
+  moveOneFoot();
+}
+void steer(long countChange){
+   while (countChange != 0){
+    analogWrite(speedOutRight, 127); //default to 50% duty cycle
+    analogWrite(speedOutLeft, 127);
+    if (countChange > 0){ //set proper direction
+      digitalWrite(directionOutRight, LOW);
+      digitalWrite(directionOutLeft, HIGH);
+    }
+    else{
+      digitalWrite(directionOutRight, HIGH);
+      digitalWrite(directionOutLeft, LOW);
+    }
+    digitalWrite(powerPin, HIGH); //give power to the motors
+    long newPosRight = motorRight.read();
+    long newPosLeft = motorLeft.read();
+    if (newPosLeft != positionLeft || newPosRight != positionRight)
+    {
+      //Serial.println(newPos);
+      newTime = micros();
+      double error = (double)(newPosLeft - positionLeft)*3.14/1600; //calculated error value from position counts for PID controller
+      double deriv;
+      if (deltaT > 0){
+        deriv = (error - oldError)*1000000.0/deltaT; //derivative value to be multiplied by Kd in PID controller
+        oldError = error;
+      }
+      else{
+        deriv = 0;
+      }
+      integral = integral + deltaT/1000000.0*error; //integral value to be multiplied by Ki in PID controller
+      int u = kP*error + kI*integral + kD*deriv; //PID controlled velocity
+      if (u > 0){
+        digitalWrite(directionOutRight, LOW); //change the direction if the velocity is negative or positive depending on which direction
+        digitalWrite(directionOutLeft, HIGH);
+      }
+      else{
+        digitalWrite(directionOutRight, HIGH);
+        digitalWrite(directionOutLeft, LOW);
+      }
+      u = abs(u);
+      analogWrite(speedOutRight, u);
+      analogWrite(speedOutLeft, u); //set new duty cycle as PID controlled value
+  
+      deltaT = micros() - newTime;
+      newTime = micros();
+      //testing block
+      if (newPosLeft == (positionLeft + countChange) || newPosRight == (positionRight + countChange)){ //stop condition
+        //Serial.println(newPos);
+        if (countChange > 0){
+          digitalWrite(directionOutRight, HIGH);
+          digitalWrite(directionOutLeft, LOW);
+        }
+        else{
+          digitalWrite(directionOutRight, LOW);
+          digitalWrite(directionOutLeft, HIGH);
+        }
+        countChange = 0;
+        delay(100);
+        digitalWrite(powerPin, LOW);
+        positionLeft = newPosLeft;
+        positionRight = newPosRight;
+      }
+    }
+  }
 }
 
-void moveMotorForward(long countChange){
-  //loop to run motor
-  
+void moveOneFoot(){
+  long countChange = 1910;
   while (countChange != 0){
     analogWrite(speedOutRight, 127); //default to 50% duty cycle
     analogWrite(speedOutLeft, 127);
