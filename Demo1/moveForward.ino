@@ -25,17 +25,17 @@ void setup() {
 }
 long positionLeft = 0;
 long positionRight = 0;
-long countChange = 1910;
+long oneFootCounts = 1910;
 long deltaT;
 double oldError = 0.0;
 long numFeet = 10;
 void loop() {
-  moveMotorForward(countChange*numFeet);
+  moveMotorForward(numFeet);
 }
 
-void moveMotorForward(long countChange){
+void moveMotorForward(long numFeet){
   //loop to run motor
-  
+  long countChange = numFeet*oneFootCounts;
   while (countChange != 0){
     analogWrite(speedOutRight, 127); //default to 50% duty cycle
     analogWrite(speedOutLeft, 127);
