@@ -23,33 +23,22 @@ def readNumber(): #receive info from arduino
     return number
 
 
+
 def send_aruco_stats():
     while True:
         marker_info = detect_aruco()
-        marker_id = marker_info['id']
         
-        if info is not None:
+        if marker_info is not None:
+            marker_id = marker_info['id']
+            marker_angle = marker_info['angle']
 
-            writeString(marker_id) #write marker ID to arduino
             print(marker_id)
             lcd.message = ("Marker: " + str(marker_id)) #output id number to LCD
             time.sleep(2) #wait 2 seconds
-            currentpos = readNumber() #read position from arduino
-            lcd.clear() #clear lcd
-            if currentpos == 4: #if statements to output to LCD which quadrant the wheel is in
-                lcd.message = ("Curr Pos: 0") #print to LCD
-                time.sleep(2) #wait 2 seconds
-            elif currentpos == 3:
-                lcd.message = ("Curr Pos: pi/2")
-                time.sleep(2)
-            elif currentpos == 2:
-                lcd.message = ("Curr Pos: pi")
-                time.sleep(2)       
-            elif currentpos == 1:
-                lcd.message = ("Curr Pos: 3*pi/2")
-                time.sleep(2)
-            currentpos = 0
+            lcd.clear()
             
+            lcd.message = ("Angle of the marker: " + str(marker_angle)) #print angle of the marker to LCD
+            time.sleep(2) #wait 2 seconds
             
             
 if __name__ == '__main__':
