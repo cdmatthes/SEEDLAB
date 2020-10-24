@@ -25,12 +25,14 @@ void setup() {
 }
 long positionLeft = 0;
 long positionRight = 0;
-long oneFootCounts = 1910;
+//1910 for one foot
+long oneFootCounts = 1975;
 long deltaT;
 double oldError = 0.0;
-long numFeet = 10;
+long numFeet = 1;
 void loop() {
   moveMotorForward(numFeet);
+  numFeet = 0;
 }
 
 void moveMotorForward(long numFeet){
