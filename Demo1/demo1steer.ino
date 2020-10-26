@@ -8,8 +8,8 @@ const int speedOutLeft = 10;
 const int powerPin = 4;
 //PID Controller Values
 const double kP = 12.049; //Kp in units of V/deg
-const double kI = 16.385; //Ki in units of V*s/deg
-const double kD = 4.7196; //Kd in units of V/(deg*s)
+const double kI = 12.385; //Ki in units of V*s/deg
+const double kD = 5.7196; //Kd in units of V/(deg*s)
 long newTime;
 double integral;
 void setup() {
@@ -25,18 +25,20 @@ void setup() {
 }
 long positionLeft = 0;
 long positionRight = 0;
-long oneFootCounts = 7850;//1865 for ~90 degrees, ~865 for 45
+const long oneEightyDegreeCounts = 3200;//3200/180
 long deltaT;
 double oldError = 0.0;
 long numSteers = 1;
+long numDegrees = 180;
 boolean moved = false;
 void loop() {
-  steer(numSteers*oneFootCounts);
+  steer(numSteers*numDegrees);
   numSteers = 0;
   moveOneFoot(moved);
   moved = true;
 }
-void steer(long countChange){
+void steer(long degree){
+  long countChange = oneEightyDegreeCounts*degree/180;
    while (countChange != 0){
     analogWrite(speedOutRight, 127); //default to 50% duty cycle
     analogWrite(speedOutLeft, 127);
