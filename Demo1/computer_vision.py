@@ -105,7 +105,7 @@ def quadrant_from_centroid(cx, cy, img_cx, img_cy):
 
 def angle_from_centroid(cx, img_cx, horizontal_fov):
     
-    return ((img_cx-cx)/img_cx) * horizontal_fov
+    return ((img_cx-cx)/img_cx) * (horizontal_fov / 2)
 
 
 def detect_aruco(bgr_img=None, get_all=False, show_capture=False, video_debug=False):

@@ -1,4 +1,4 @@
-from computer_vision import detect_aruco
+from computer_vision import detect_aruco, camera_init
 from smbus2 import SMBus
 import time
 import board
@@ -45,5 +45,6 @@ def send_aruco_stats():
             
             
 if __name__ == '__main__':
+    camera_init()
     send_aruco_stats()
     
