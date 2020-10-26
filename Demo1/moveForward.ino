@@ -8,8 +8,8 @@ const int speedOutLeft = 10;
 const int powerPin = 4;
 //PID Controller Values
 const double kP = 12.049; //Kp in units of V/deg
-const double kI = 16.385; //Ki in units of V*s/deg
-const double kD = 2.7196; //Kd in units of V/(deg*s)
+const double kI = 12.385; //Ki in units of V*s/deg
+const double kD = 4.7196; //Kd in units of V/(deg*s)
 long newTime;
 double integral;
 void setup() {
@@ -29,7 +29,7 @@ long positionRight = 0;
 long oneFootCounts = 1975;
 long deltaT;
 double oldError = 0.0;
-long numFeet = 1;
+long numFeet = 7;
 void loop() {
   moveMotorForward(numFeet);
   numFeet = 0;
@@ -37,7 +37,8 @@ void loop() {
 
 void moveMotorForward(long numFeet){
   //loop to run motor
-  long countChange = numFeet*oneFootCounts;
+  long countChange;
+  countChange = numFeet*oneFootCounts;
   while (countChange != 0){
     analogWrite(speedOutRight, 127); //default to 50% duty cycle
     analogWrite(speedOutLeft, 127);
