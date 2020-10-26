@@ -30,16 +30,20 @@ def send_aruco_stats():
         
         if marker_info is not None:
             marker_id = marker_info['id']
-            marker_angle = marker_info['angle']
-
-            print(marker_id)
-            lcd.message = ("Marker: " + str(marker_id)) #output id number to LCD
-            time.sleep(2) #wait 2 seconds
-            lcd.clear()
+            marker_angle = round(marker_info['angle'], 2)
             
-            lcd.message = ("Angle of the marker: " + str(marker_angle)) #print angle of the marker to LCD
-            time.sleep(2) #wait 2 seconds
+            #lcd.message = ("Marker: " + str(marker_id)) #output id number to LCD
+            #time.sleep(2) #wait 2 seconds
+            #lcd.clear()
+            
+            lcd.message = ("Angle: " + str(marker_angle)) #print angle of the marker to LCD
+            time.sleep(0.5) #wait 2 seconds
+#        else:
+#            lcd.message = "Detecting" #output id number to LCD
+#            time.sleep(0.1)
+#            lcd.message = ""
             
             
 if __name__ == '__main__':
     send_aruco_stats()
+    
