@@ -60,7 +60,6 @@ def capture_img(save=False, show=True, fps=0):
     
     # Save Image
     if save:
-#        print("Savicamera.shutter_speed = camera.exposure_speedng image "+fileName)
         try:
             cv2.imwrite(fileName, img)
         except:
@@ -68,7 +67,6 @@ def capture_img(save=False, show=True, fps=0):
             pass    
     
     return img
-
 
 
 def centroid_from_corners(marker_corners):
@@ -84,7 +82,6 @@ def centroid_from_corners(marker_corners):
     
 
 def quadrant_from_centroid(cx, cy, img_cx, img_cy):
-    
     # Get marker center relative to image center
     relative_x = cx - img_cx
     relative_y = cy - img_cy
@@ -104,8 +101,8 @@ def quadrant_from_centroid(cx, cy, img_cx, img_cy):
 
 
 def angle_from_centroid(cx, img_cx, horizontal_fov):
-    
-    return ((img_cx-cx)/img_cx) * (horizontal_fov / 2)
+    dx = img_cx-cx  # Horizontal distance from origin
+    return (dx/img_cx) * (horizontal_fov / 2)   # Angle will be a proportion
 
 
 def detect_aruco(bgr_img=None, get_all=False, show_capture=False, video_debug=False):
@@ -118,9 +115,7 @@ def detect_aruco(bgr_img=None, get_all=False, show_capture=False, video_debug=Fa
     aruco_dict = cv2.aruco.Dictionary_get(cv2.aruco.DICT_6X6_250)   # Define correct dictionary
 
     # Do aruco detection
-    corners, ids, rejectedImgPoints = cv2.aruco.detectMarkers(gray_img,
-                                                              aruco_dict,
-                                                              parameters=parameters)
+    corners, ids, rejectedImgPoints = cv2.aruco.detectMarkers(gray_img, aruco_dict, parameters=parameters)
 
 
     # If no markers detected
@@ -133,27 +128,27 @@ def detect_aruco(bgr_img=None, get_all=False, show_capture=False, video_debug=Fa
     img_cy = img_height // 2
     img_cx = img_width // 2
     
-    horizontal_fov = 60.3
+    horizontal_fov = 60.3   # Frame of View of camera
     
     results = []
     for marker_id, marker_corners in zip(ids, corners):   
- 
         cx, cy = centroid_from_corners(marker_corners)  # Find centroid of marker
         
+        # Make a dictionary containing info about the marker including id, quadrant, and angle
         stats = {
             'id': marker_id[0],
             'quadrant': quadrant_from_centroid(cx, cy, img_cx, img_cy),
             'angle': angle_from_centroid(cx, img_cx, horizontal_fov)
         }
-        if not get_all:
+        
+        if not get_all: # Just return one marker if needed
             return stats
         
         results.append(stats)
     
     return results
 
-
-
+# Strictly for testing, our program is ran from system_integration.py
 if __name__ == '__main__':
     camera_init()
     
