@@ -37,16 +37,16 @@ def send_aruco_stats():
             marker_angle = round(marker_info['angle'], 2)
             marker_distance = round(marker_info['distance'],3)
             
-            sending = int(marker_distance)
-            send2 =  int(marker_angle)   
+            sending = int(marker_distance) #convert distance to an integer
+            send2 =  int(marker_angle)   #convert anlge value into a integer
             
-            print("Marker distance: ",sending)
-            print("Angle: ", send2)
+            print("Marker distance: ",sending) #print to shell for debugging purposes
+            print("Angle: ", send2) #print to shell for debugging purposes
             
-            array = [sending,send2]
+            array = [sending,send2] #put diatnce and angle values into an array
             
             lcd.message = ("Distance: " + str(sending)) #print angle of the marker to LCD
-            writeString(array) #send to arduino
+            writeString(array) #send array to arduino
             
 if __name__ == '__main__':
     camera_init()
