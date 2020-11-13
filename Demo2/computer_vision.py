@@ -4,8 +4,6 @@ Class: EENG350
 Assignment: Computer Vision Script for Demo 2
 """
 
-
-
 from smbus2 import SMBus
 import time
 import cv2
@@ -29,13 +27,14 @@ HORIZONTAL_FOV = 60.3   # Frame of View of camera
 
 # Focal Length Calculation
 # Note: f=fx=fy
-x = 1135-1014 # pixels
-Z = 36 # inches
-f = (x*Z)/MARKER_SIZE
+# x = 1135-1014 # pixels
+# Z = 36 # inches
+# f = (x*Z)/MARKER_SIZE
 
-x = 1172-997 # pixels
-Z = 25 # inches
-f = (((x*Z)/MARKER_SIZE) + f) / 2
+# x = 1172-997 # pixels
+# Z = 25 # inches
+# f = (((x*Z)/MARKER_SIZE) + f) / 2
+f = 1840.0
 
 def camera_init(res=None, iso=400):
     # Set global camera variable
