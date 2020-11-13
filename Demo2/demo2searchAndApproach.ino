@@ -1,6 +1,6 @@
 #include <Wire.h> 
 #define SLAVE_ADDRESS 0x04
-signed int receive[3];
+signed int receive[3]; //will only need distance and angle
 int distance = 0;
 int angle = 999;
 char sendOut[100];
@@ -9,7 +9,7 @@ int fin = 0;
 int len = 0;
 int a = 0;
 String st;
-#include <Encoder.h>
+#include <Encoder.h> //define encoders
 Encoder motorRight(3,5);
 Encoder motorLeft(2,6);
 const int directionOutRight = 7;
@@ -20,12 +20,12 @@ const int powerPin = 4;
 //PID Controller Values
 const double kP = 12.049; //Kp in units of V/deg
 const double kI = 10.385; //Ki in units of V*s/deg
-const double kD = 7.7196; //Kd in units of V/(deg*s)
+const double kD = 8.7196; //Kd in units of V/(deg*s)
 const double kPInnerCircle = 6.049; //Kp value for inner wheel when circling beacon
 long oneFootCounts = 1975;
 long newTime;
 double integral;
-double integralInner;
+double integralInner; //separate PID terms for circle
 double integralOuter;
 void setup() {
   Serial.begin(250000);
@@ -51,7 +51,7 @@ double oldError = 0.0;
 const long oneEightyDegreeCounts = 3200;//3200/180
 long positionLeft = 0;
 long positionRight = 0;
-double oldErrorInner = 0.0;
+double oldErrorInner = 0.0; //multiple PID error values for cricle
 double oldErrorOuter = 0.0;
 boolean hasRun = false;
 void loop() {
@@ -60,11 +60,11 @@ void loop() {
     searchForBeacon();
     moveMotorForward(distance);
     integral = 0.0;
-    delay(200);
-    steer(90);
-    integralInner = 0.0;
-    integralOuter = 0.0;
-    circleBeacon();
+//    delay(400); //this code is commented out for when the robot only wants to approach the beacon not circle it
+//    steer(90);
+//    integralInner = 0.0;
+//    integralOuter = 0.0;
+//    circleBeacon();
     hasRun = true;
   }
 }
@@ -89,7 +89,7 @@ void receiveData(int byteCount)
   }
 
 void searchForBeacon(){
-  while (angle > 60 || angle < -60){
+  while (angle > 60 || angle < -60){ //while the marker is out of the camera's field of vision
      long countChange = oneEightyDegreeCounts*45/180;
      while (countChange != 0){
       analogWrite(speedOutRight, 127); //default to 50% duty cycle
@@ -153,14 +153,14 @@ void searchForBeacon(){
         }
       }
     }
-    delay(2000);
+    delay(2000); //give the camera a few seconds to detect the aruco marker
   }
   
   long countChange = oneEightyDegreeCounts*(-1*angle)/180;
   integral = 0.0;
   
-  while (countChange != 0){
-    analogWrite(speedOutRight, 32); //default to 50% duty cycle
+  while (countChange != 0){ //angle adjusting loop
+    analogWrite(speedOutRight, 32); //start at small duty cycle since most adjustments will be small
     analogWrite(speedOutLeft, 32);
     if (countChange > 0){ //set proper direction
       digitalWrite(directionOutRight, LOW);
@@ -225,7 +225,7 @@ void searchForBeacon(){
 void moveMotorForward(long numInches){
   //loop to run motor
   long countChange;
-  countChange = numInches*oneFootCounts/12 - 3*oneFootCounts/2; //subtract 3/4 of a foot to ensure not crashing into beacon
+  countChange = numInches*oneFootCounts/12 - 7*oneFootCounts/8; //subtract 7/8 of a foot to ensure not crashing into beacon
   while (countChange != 0){
     analogWrite(speedOutRight, 127); //default to 50% duty cycle
     analogWrite(speedOutLeft, 127);
@@ -362,13 +362,14 @@ void steer(long degree){
 
 void circleBeacon(){
   //loop to run motor
-  double innerCircleDistance = (5.6/12.0)*2*3.14;
+  double innerCircleDistance = (5.8/12.0)*2*3.14*4/3; //calculate circle distances
   double outerCircleDistance = innerCircleDistance + 2*3.14*(13.0/12.0);
   long innerCircleCounts = innerCircleDistance*1975*4/3;
   long outerCircleCounts = outerCircleDistance*2170*4/3;
   while (innerCircleCounts != 0 && outerCircleCounts != 0){
     analogWrite(speedOutRight, 127); //default to 50% duty cycle for outer wheel
-    analogWrite(speedOutLeft, 32); //default to 25% duty cycle for inner wheel
+    analogWrite(speedOutLeft, 40); //default to just above 25% duty cycle for inner wheel
+    //difference in duty cycle determines size of the radii
     if (innerCircleCounts > 0){ //set proper direction
       digitalWrite(directionOutRight, HIGH);
       digitalWrite(directionOutLeft, HIGH);
