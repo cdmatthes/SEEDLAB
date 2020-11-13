@@ -117,6 +117,8 @@ def angle_from_centroid(cx, img_cx, horizontal_fov):
 
 
 def calc_marker_distance(marker_corners, P_M, K):
+    # Find pose of marker from corners and corresponding model corners. Uses camera matrix to find scale
+    # Will return the translational vector tvec
     _, rvec, tvec = cv2.solvePnP(
         objectPoints=P_M,
         imagePoints=marker_corners,
